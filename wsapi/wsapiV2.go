@@ -719,6 +719,8 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 	}
 
 	resp := new(AnchorsResponse)
+	resp.Bitcoin = false
+	resp.Ethereum = false
 
 	// Search for an AnchorRecord for the DBlock our entry is in
 	if dirBlockInfo, err := dbo.FetchDirBlockInfoByKeyMR(hash); err != nil {
@@ -728,9 +730,10 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 		dbi := dirBlockInfo.(*dbInfo.DirBlockInfo)
 
 		if dbi.BTCConfirmed {
-			resp.Bitcoin = new(BitcoinAnchorResponse)
-			resp.Bitcoin.TransactionHash = dbi.BTCTxHash.(*primitives.Hash)
-			resp.Bitcoin.BlockHash = dbi.BTCBlockHash.(*primitives.Hash)
+			btc := new(BitcoinAnchorResponse)
+			btc.TransactionHash = dbi.BTCTxHash.(*primitives.Hash)
+			btc.BlockHash = dbi.BTCBlockHash.(*primitives.Hash)
+			resp.Bitcoin = btc
 		}
 		if dbi.EthereumConfirmed && !dbi.EthereumAnchorRecordEntryHash.IsSameAs(primitives.ZeroHash) {
 			anchorRecordEntry, err := dbo.FetchEntry(dbi.EthereumAnchorRecordEntryHash)
@@ -742,15 +745,16 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 			if err != nil {
 				return nil, NewCustomInternalError(err)
 			}
-			resp.Ethereum = new(EthereumAnchorResponse)
-			resp.Ethereum.DBHeightMax = int64(anchorRecord.DBHeightMax)
-			resp.Ethereum.DBHeightMin = int64(anchorRecord.DBHeightMin)
-			resp.Ethereum.WindowMR = anchorRecord.WindowMR
-			resp.Ethereum.RecordHeight = int64(anchorRecord.RecordHeight)
-			resp.Ethereum.ContractAddress = anchorRecord.Ethereum.ContractAddress
-			resp.Ethereum.TxID = anchorRecord.Ethereum.TxID
-			resp.Ethereum.BlockHash = anchorRecord.Ethereum.BlockHash
-			resp.Ethereum.TxIndex = anchorRecord.Ethereum.TxIndex
+			eth := new(EthereumAnchorResponse)
+			eth.DBHeightMax = int64(anchorRecord.DBHeightMax)
+			eth.DBHeightMin = int64(anchorRecord.DBHeightMin)
+			eth.WindowMR = anchorRecord.WindowMR
+			eth.RecordHeight = int64(anchorRecord.RecordHeight)
+			eth.ContractAddress = anchorRecord.Ethereum.ContractAddress
+			eth.TxID = anchorRecord.Ethereum.TxID
+			eth.BlockHash = anchorRecord.Ethereum.BlockHash
+			eth.TxIndex = anchorRecord.Ethereum.TxIndex
+			resp.Ethereum = eth
 		}
 	}
 
@@ -782,15 +786,16 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 				if err != nil {
 					return nil, NewCustomInternalError(err)
 				}
-				resp.Ethereum = new(EthereumAnchorResponse)
-				resp.Ethereum.DBHeightMax = int64(anchorRecord.DBHeightMax)
-				resp.Ethereum.DBHeightMin = int64(anchorRecord.DBHeightMin)
-				resp.Ethereum.WindowMR = anchorRecord.WindowMR
-				resp.Ethereum.RecordHeight = int64(anchorRecord.RecordHeight)
-				resp.Ethereum.ContractAddress = anchorRecord.Ethereum.ContractAddress
-				resp.Ethereum.TxID = anchorRecord.Ethereum.TxID
-				resp.Ethereum.BlockHash = anchorRecord.Ethereum.BlockHash
-				resp.Ethereum.TxIndex = anchorRecord.Ethereum.TxIndex
+				eth := new(EthereumAnchorResponse)
+				eth.DBHeightMax = int64(anchorRecord.DBHeightMax)
+				eth.DBHeightMin = int64(anchorRecord.DBHeightMin)
+				eth.WindowMR = anchorRecord.WindowMR
+				eth.RecordHeight = int64(anchorRecord.RecordHeight)
+				eth.ContractAddress = anchorRecord.Ethereum.ContractAddress
+				eth.TxID = anchorRecord.Ethereum.TxID
+				eth.BlockHash = anchorRecord.Ethereum.BlockHash
+				eth.TxIndex = anchorRecord.Ethereum.TxIndex
+				resp.Ethereum = eth
 				break
 			}
 		}

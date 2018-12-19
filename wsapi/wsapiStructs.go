@@ -81,9 +81,26 @@ type RawDataResponse struct {
 	//TODO: add
 }
 
+// For each chain: false or chain specific anchor response
 type AnchorsResponse struct {
-	Bitcoin  *BitcoinAnchorResponse  `json:"bitcoin,omitempty"`
-	Ethereum *EthereumAnchorResponse `json:"ethereum,omitempty"`
+	Bitcoin  interface{} `json:"bitcoin"`
+	Ethereum interface{} `json:"ethereum"`
+}
+
+type BitcoinAnchorResponse struct {
+	TransactionHash *primitives.Hash `json:"transactionhash"`
+	BlockHash       *primitives.Hash `json:"blockhash"`
+}
+
+type EthereumAnchorResponse struct {
+	DBHeightMax     int64  `json:"dbheightmax"`
+	DBHeightMin     int64  `json:"dbheightmin"`
+	WindowMR        string `json:"windowmr"`
+	RecordHeight    int64  `json:"recordheight"`
+	ContractAddress string `json:"contractaddress"`
+	TxID            string `json:"txid"`
+	BlockHash       string `json:"blockhash"`
+	TxIndex         int64  `json:"txindex"`
 }
 
 type ReceiptResponse struct {
@@ -234,22 +251,6 @@ type BlockHeightResponse struct {
 	FBlock  *JStruct `json:"fblock,omitempty"`
 	ECBlock *JStruct `json:"ecblock,omitempty"`
 	RawData string   `json:"rawdata,omitempty"`
-}
-
-type BitcoinAnchorResponse struct {
-	TransactionHash *primitives.Hash `json:"transactionhash"`
-	BlockHash       *primitives.Hash `json:"blockhash"`
-}
-
-type EthereumAnchorResponse struct {
-	DBHeightMax     int64  `json:"dbheightmax"`
-	DBHeightMin     int64  `json:"dbheightmin"`
-	WindowMR        string `json:"windowmr"`
-	RecordHeight    int64  `json:"recordheight"`
-	ContractAddress string `json:"contractaddress"`
-	TxID            string `json:"txid"`
-	BlockHash       string `json:"blockhash"`
-	TxIndex         int64  `json:"txindex"`
 }
 
 //Requests

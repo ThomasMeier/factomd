@@ -808,20 +808,19 @@ func HandleV2Receipt(state interfaces.IState, params interface{}) (interface{}, 
 	n := time.Now()
 	defer HandleV2APICallReceipt.Observe(float64(time.Since(n).Nanoseconds()))
 
-	hashkey := new(HashRequest)
-	err := MapToObject(params, hashkey)
+	req := new(HashRequest)
+	err := MapToObject(params, req)
 	if err != nil {
 		return nil, NewInvalidParamsError()
 	}
 
-	h, err := primitives.HexToHash(hashkey.Hash)
+	h, err := primitives.HexToHash(req.Hash)
 	if err != nil {
 		return nil, NewInvalidHashError()
 	}
 
-	dbase := state.GetDB()
-
-	receipt, err := receipts.CreateFullReceipt(dbase, h)
+	dbo := state.GetDB()
+	receipt, err := receipts.CreateFullReceipt(dbo, h)
 	if err != nil {
 		return nil, NewReceiptError()
 	}

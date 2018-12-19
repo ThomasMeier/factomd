@@ -269,23 +269,19 @@ func CreateReceipt(dbo interfaces.DBOverlaySimple, entryID interfaces.IHash) (*R
 	receipt.Entry = new(JSON)
 	receipt.Entry.EntryHash = entryID.String()
 
-	//EBlock
+	// Entry Block
 
 	hash, err := dbo.FetchIncludedIn(entryID)
 	if err != nil {
 		return nil, err
-	}
-
-	if hash == nil {
+	} else if hash == nil {
 		return nil, fmt.Errorf("Block containing entry not found")
 	}
 
 	eBlock, err := dbo.FetchEBlock(hash)
 	if err != nil {
 		return nil, err
-	}
-
-	if eBlock == nil {
+	} else if eBlock == nil {
 		return nil, fmt.Errorf("EBlock not found")
 	}
 
@@ -293,8 +289,7 @@ func CreateReceipt(dbo interfaces.DBOverlaySimple, entryID interfaces.IHash) (*R
 	receipt.EntryBlockKeyMR = hash.(*primitives.Hash)
 
 	entries := eBlock.GetEntryHashes()
-	//fmt.Printf("eBlock entries - %v\n\n", entries)
-	branch := primitives.BuildMerkleBranchForEntryHash(entries, entryID, true)
+	branch := primitives.BuildMerkleBranchForHash(entries, entryID, true)
 	blockNode := new(primitives.MerkleNode)
 	left, err := eBlock.HeaderHash()
 	if err != nil {
@@ -303,43 +298,27 @@ func CreateReceipt(dbo interfaces.DBOverlaySimple, entryID interfaces.IHash) (*R
 	blockNode.Left = left.(*primitives.Hash)
 	blockNode.Right = eBlock.BodyKeyMR().(*primitives.Hash)
 	blockNode.Top = hash.(*primitives.Hash)
-	//fmt.Printf("eBlock blockNode - %v\n\n", blockNode)
 	branch = append(branch, blockNode)
 	receipt.MerkleBranch = append(receipt.MerkleBranch, branch...)
 
-	//str, _ := eBlock.JSONString()
-	//fmt.Printf("eBlock - %v\n\n", str)
-
-	//DBlock
+	// Directory Block
 
 	hash, err = dbo.FetchIncludedIn(hash)
 	if err != nil {
 		return nil, err
-	}
-
-	if hash == nil {
+	} else if hash == nil {
 		return nil, fmt.Errorf("Block containing EBlock not found")
 	}
 
 	dBlock, err := dbo.FetchDBlock(hash)
 	if err != nil {
 		return nil, err
-	}
-
-	if dBlock == nil {
+	} else if dBlock == nil {
 		return nil, fmt.Errorf("DBlock not found")
 	}
 
-	//str, _ = dBlock.JSONString()
-	//fmt.Printf("dBlock - %v\n\n", str)
-
 	entries = dBlock.GetEntryHashesForBranch()
-	//fmt.Printf("dBlock entries - %v\n\n", entries)
-
-	//merkleTree := primitives.BuildMerkleTreeStore(entries)
-	//fmt.Printf("dBlock merkleTree - %v\n\n", merkleTree)
-
-	branch = primitives.BuildMerkleBranchForEntryHash(entries, receipt.EntryBlockKeyMR, true)
+	branch = primitives.BuildMerkleBranchForHash(entries, receipt.EntryBlockKeyMR, true)
 	blockNode = new(primitives.MerkleNode)
 	left, err = dBlock.GetHeaderHash()
 	if err != nil {
@@ -348,18 +327,16 @@ func CreateReceipt(dbo interfaces.DBOverlaySimple, entryID interfaces.IHash) (*R
 	blockNode.Left = left.(*primitives.Hash)
 	blockNode.Right = dBlock.BodyKeyMR().(*primitives.Hash)
 	blockNode.Top = hash.(*primitives.Hash)
-	//fmt.Printf("dBlock blockNode - %v\n\n", blockNode)
 	branch = append(branch, blockNode)
 	receipt.MerkleBranch = append(receipt.MerkleBranch, branch...)
 
-	//DirBlockInfo
+	// Directory Block Info
 
 	hash = dBlock.DatabasePrimaryIndex()
 	receipt.DirectoryBlockKeyMR = hash.(*primitives.Hash)
 	receipt.DirectoryBlockHeight = dBlock.GetDatabaseHeight()
 
 	return receipt, nil
-
 }
 
 func VerifyFullReceipt(dbo interfaces.DBOverlaySimple, receiptStr string) error {

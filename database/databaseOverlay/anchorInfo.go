@@ -5,8 +5,6 @@
 package databaseOverlay
 
 import (
-	"sort"
-
 	"github.com/FactomProject/factomd/anchor"
 	"github.com/FactomProject/factomd/common/directoryBlock/dbInfo"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -57,34 +55,8 @@ func (dbo *Overlay) RebuildDirBlockInfo() error {
 	}
 
 	entries := append(btcAnchorEntries, ethAnchorEntries...)
-	anchorRecords := []*anchor.AnchorRecord{}
 	for _, entry := range entries {
-		if entry.DatabasePrimaryIndex().String() == "24674e6bc3094eb773297de955ee095a05830e431da13a37382dcdc89d73c7d7" {
-			continue
-		}
-		content := entry.GetContent()
-		ar, err := anchor.UnmarshalAnchorRecord(content)
-		if err != nil {
-			panic(err)
-			return err
-		}
-		anchorRecords = append(anchorRecords, ar)
-	}
-
-	return dbo.SaveAnchorInfoAsDirBlockInfo(anchorRecords)
-}
-
-func (dbo *Overlay) SaveAnchorInfoAsDirBlockInfo(ars []*anchor.AnchorRecord) error {
-	sort.Sort(ByAnchorDBHeightAscending(ars))
-	for _, ar := range ars {
-		dbi, err := dbo.CreateUpdatedDirBlockInfoFromAnchorRecord(ar)
-		if err != nil {
-			return err
-		}
-		err = dbo.SaveDirBlockInfo(dbi)
-		if err != nil {
-			return err
-		}
+		dbo.SaveAnchorInfoFromEntry(entry)
 	}
 	return nil
 }
@@ -107,6 +79,9 @@ func (dbo *Overlay) SaveAnchorInfoFromEntry(entry interfaces.IEBEntry) error {
 	if err != nil {
 		return err
 	}
+	if dbi.EthereumConfirmed && dbi.EthereumAnchorRecordEntryHash.IsSameAs(primitives.ZeroHash){
+		dbi.EthereumAnchorRecordEntryHash = entry.GetHash()
+	}
 	return dbo.ProcessDirBlockInfoBatch(dbi)
 }
 
@@ -128,6 +103,9 @@ func (dbo *Overlay) SaveAnchorInfoFromEntryMultiBatch(entry interfaces.IEBEntry)
 	if err != nil {
 		return err
 	}
+	if dbi.EthereumConfirmed && dbi.EthereumAnchorRecordEntryHash.IsSameAs(primitives.ZeroHash){
+		dbi.EthereumAnchorRecordEntryHash = entry.GetHash()
+	}
 	return dbo.ProcessDirBlockInfoMultiBatch(dbi)
 }
 
@@ -148,7 +126,7 @@ func (dbo *Overlay) CreateUpdatedDirBlockInfoFromAnchorRecord(ar *anchor.AnchorR
 
 	var dbi *dbInfo.DirBlockInfo
 	if dirBlockInfo == nil {
-		dbi = new(dbInfo.DirBlockInfo)
+		dbi = dbInfo.NewDirBlockInfo()
 		dbi.DBHash = dirBlockKeyMR
 		dbi.DBMerkleRoot = dirBlockKeyMR
 		dbi.DBHeight = height
@@ -169,7 +147,6 @@ func (dbo *Overlay) CreateUpdatedDirBlockInfoFromAnchorRecord(ar *anchor.AnchorR
 		}
 		dbi.BTCConfirmed = true
 	} else if ar.Ethereum != nil {
-		dbi.EthereumAnchorRecord = ar.String()
 		dbi.EthereumConfirmed = true
 	}
 

@@ -732,8 +732,13 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 			resp.Bitcoin.TransactionHash = dbi.BTCTxHash.(*primitives.Hash)
 			resp.Bitcoin.BlockHash = dbi.BTCBlockHash.(*primitives.Hash)
 		}
-		if dbi.EthereumConfirmed && dbi.EthereumAnchorRecord != "" {
-			anchorRecord, err := anchor.UnmarshalAnchorRecord([]byte(dbi.EthereumAnchorRecord))
+		if dbi.EthereumConfirmed && !dbi.EthereumAnchorRecordEntryHash.IsSameAs(primitives.ZeroHash) {
+			anchorRecordEntry, err := dbo.FetchEntry(dbi.EthereumAnchorRecordEntryHash)
+			if err != nil {
+				return nil, NewCustomInternalError(err)
+			}
+			anchorRecordJSON := anchorRecordEntry.GetContent()
+			anchorRecord, err := anchor.UnmarshalAnchorRecord(anchorRecordJSON)
 			if err != nil {
 				return nil, NewCustomInternalError(err)
 			}
@@ -767,8 +772,13 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 			}
 
 			dbi := dirBlockInfo.(*dbInfo.DirBlockInfo)
-			if dbi.EthereumConfirmed && dbi.EthereumAnchorRecord != "" {
-				anchorRecord, err := anchor.UnmarshalAnchorRecord([]byte(dbi.EthereumAnchorRecord))
+			if dbi.EthereumConfirmed && !dbi.EthereumAnchorRecordEntryHash.IsSameAs(primitives.ZeroHash) {
+				anchorRecordEntry, err := dbo.FetchEntry(dbi.EthereumAnchorRecordEntryHash)
+				if err != nil {
+					return nil, NewCustomInternalError(err)
+				}
+				anchorRecordJSON := anchorRecordEntry.GetContent()
+				anchorRecord, err := anchor.UnmarshalAnchorRecord(anchorRecordJSON)
 				if err != nil {
 					return nil, NewCustomInternalError(err)
 				}

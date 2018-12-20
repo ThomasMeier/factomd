@@ -83,6 +83,8 @@ type RawDataResponse struct {
 
 // For each chain: false or chain specific anchor response
 type AnchorsResponse struct {
+	Height   int64       `json:"directoryblockheight"`
+	KeyMR    string      `json:"directoryblockkeymr"`
 	Bitcoin  interface{} `json:"bitcoin"`
 	Ethereum interface{} `json:"ethereum"`
 }
@@ -93,10 +95,12 @@ type BitcoinAnchorResponse struct {
 }
 
 type EthereumAnchorResponse struct {
-	DBHeightMax     int64  `json:"dbheightmax"`
-	DBHeightMin     int64  `json:"dbheightmin"`
-	WindowMR        string `json:"windowmr"`
-	RecordHeight    int64  `json:"recordheight"`
+	RecordHeight    int64                    `json:"recordheight"`
+	DBHeightMax     int64                    `json:"dbheightmax"`
+	DBHeightMin     int64                    `json:"dbheightmin"`
+	WindowMR        string                   `json:"windowmr"`
+	MerkleBranch    []*primitives.MerkleNode `json:"merklebranch"`
+
 	ContractAddress string `json:"contractaddress"`
 	TxID            string `json:"txid"`
 	BlockHash       string `json:"blockhash"`

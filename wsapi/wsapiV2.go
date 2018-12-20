@@ -713,17 +713,19 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 	}
 
 	dbo := state.GetDB()
-	hash, err := dbo.FetchDBKeyMRByHeight(uint32(request.Height))
+	dBlockKeyMR, err := dbo.FetchDBKeyMRByHeight(uint32(request.Height))
 	if err != nil {
 		return nil, NewBlockNotFoundError()
 	}
 
 	resp := new(AnchorsResponse)
+	resp.Height = request.Height
+	resp.KeyMR = dBlockKeyMR.String()
 	resp.Bitcoin = false
 	resp.Ethereum = false
 
 	// Search for an AnchorRecord for the DBlock our entry is in
-	if dirBlockInfo, err := dbo.FetchDirBlockInfoByKeyMR(hash); err != nil {
+	if dirBlockInfo, err := dbo.FetchDirBlockInfoByKeyMR(dBlockKeyMR); err != nil {
 		return nil, NewBlockNotFoundError()
 	} else if dirBlockInfo != nil {
 		// An anchor is already confirmed either Bitcoin or Ethereum for this directory block and was written back into Factom
@@ -754,12 +756,22 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 			eth.TxID = anchorRecord.Ethereum.TxID
 			eth.BlockHash = anchorRecord.Ethereum.BlockHash
 			eth.TxIndex = anchorRecord.Ethereum.TxIndex
+
+			var dblockMRs []interfaces.IHash
+			for i := eth.DBHeightMin; i <= eth.DBHeightMax; i++ {
+				block, err := dbo.FetchDBlockByHeight(uint32(i))
+				if err != nil {
+					return nil, NewCustomInternalError(err)
+				}
+				dblockMRs = append(dblockMRs, block.GetKeyMR())
+			}
+			eth.MerkleBranch = primitives.BuildMerkleBranchForHash(dblockMRs, dBlockKeyMR, true)
 			resp.Ethereum = eth
 		}
 	}
 
 	// If we didn't find the Ethereum anchor in that block's DirBlockInfo, try checking following 999 DBlocks
-	if resp.Ethereum == nil {
+	if resp.Ethereum == false {
 		for i := request.Height + 1; i < request.Height + 1000; i++ {
 			dirBlockKeyMR, err := dbo.FetchDBKeyMRByHeight(uint32(i))
 			if err != nil {
@@ -795,6 +807,16 @@ func HandleV2AnchorsByHeight(state interfaces.IState, params interface{}) (inter
 				eth.TxID = anchorRecord.Ethereum.TxID
 				eth.BlockHash = anchorRecord.Ethereum.BlockHash
 				eth.TxIndex = anchorRecord.Ethereum.TxIndex
+
+				var dblockMRs []interfaces.IHash
+				for i := eth.DBHeightMin; i <= eth.DBHeightMax; i++ {
+					block, err := dbo.FetchDBlockByHeight(uint32(i))
+					if err != nil {
+						return nil, NewCustomInternalError(err)
+					}
+					dblockMRs = append(dblockMRs, block.GetKeyMR())
+				}
+				eth.MerkleBranch = primitives.BuildMerkleBranchForHash(dblockMRs, dBlockKeyMR, true)
 				resp.Ethereum = eth
 				break
 			}

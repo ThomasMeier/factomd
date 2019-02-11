@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # run same tests as specified in .circleci/config.yml
-PACKAGES=$(glide nv | grep -v Utilities | grep -v LongTests)
+#PACKAGES=$(glide nv | grep -v Utilities | grep -v LongTests)
+PACKAGES=('./simTest/...')
+
 FAIL=""
 
 for PKG in ${PACKAGES[*]} ; do

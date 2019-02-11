@@ -330,8 +330,7 @@ func WaitForMinute(s *state.State, newMinute int) {
 	WaitForQuiet(s, newBlock, newMinute)
 	TimeNow(s)
 }
-
-func CheckAuthoritySet(t *testing.T) {
+func CountAuthoritySet() (int, int, int) {
 	leadercnt := 0
 	auditcnt := 0
 	followercnt := 0
@@ -354,6 +353,11 @@ func CheckAuthoritySet(t *testing.T) {
 			}
 		}
 	}
+	return leadercnt, auditcnt, followercnt
+}
+
+func CheckAuthoritySet(t *testing.T) {
+	leadercnt, auditcnt, followercnt := CountAuthoritySet()
 
 	if leadercnt != Leaders {
 		engine.PrintOneStatus(0, 0)

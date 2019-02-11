@@ -1909,7 +1909,6 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 					s.DBStates.FixupLinks(prev, dbstate)
 				}
 
-				s.GetAckChange()
 				s.CheckForIDChange()
 
 				s.DBSigProcessed = 0
@@ -2037,8 +2036,15 @@ func (s *State) GetUnsyncedServersString(dbheight uint32) string {
 }
 
 func (s *State) CheckForIDChange() {
+	changed, _ := s.GetAckChange()
 	var reloadIdentity bool = false
-	if s.AckChange > 0 {
+
+	if changed {
+		s.LogPrintf("AckChange", "AckChange %v", s.AckChange)
+		// TODO write to stderror also
+	}
+
+	if s.AckChange > 0 { // REVIEW: if set to 0 it seems change never takes effect
 		if s.LLeaderHeight >= s.AckChange {
 			reloadIdentity = true
 		}
@@ -2052,6 +2058,7 @@ func (s *State) CheckForIDChange() {
 		}
 		s.LocalServerPrivKey = config.App.LocalServerPrivKey
 		s.initServerKeys()
+		s.LogPrintf("AckChange", "reloadIdentity local_priv: %v pub: %v, priv: %v", s.LocalServerPrivKey, s.GetServerPublicKey(), s.GetServerPrivateKey())
 	}
 }
 

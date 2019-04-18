@@ -1,6 +1,6 @@
 # Factomd
 
-Official implementation of the actom&reg; protocol.
+Official implementation of the Factom&reg; protocol.
 
 [![Build Status](https://travis-ci.org/FactomProject/factomd.svg?branch=develop)](https://travis-ci.org/FactomProject/factomd)
 [![CircleCI](https://circleci.com/gh/FactomProject/factomd/tree/develop.svg?style=shield)](https://circleci.com/gh/FactomProject/factomd/tree/develop)
